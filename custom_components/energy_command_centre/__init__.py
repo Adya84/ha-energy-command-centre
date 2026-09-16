@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         webcomponent_name=PANEL_ELEMENT,
         frontend_url_path=PANEL_URL,
-        module_url=f"{STATIC_URL}/energy-command-centre-panel.js?v={VERSION}",
+        module_url=f"{STATIC_URL}/energy-command-centre-premium.js?v={VERSION}",
         sidebar_title="Energy Hub",
         sidebar_icon="mdi:lightning-bolt-circle",
         require_admin=False,
