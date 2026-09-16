@@ -1,0 +1,50 @@
+name: Release alpha.5
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - RELEASE_NOTES_ALPHA5.md
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run frontend tests
+        run: node --test tests/*.test.mjs
+
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
+          ignore: topics
+
+      - name: Hassfest validation
+        uses: home-assistant/actions/hassfest@master
+
+      - name: Create alpha.5 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v0.1.0-alpha.5"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists"
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "Energy Command Centre 0.1.0-alpha.5" \
+            --notes-file RELEASE_NOTES_ALPHA5.md \
+            --prerelease

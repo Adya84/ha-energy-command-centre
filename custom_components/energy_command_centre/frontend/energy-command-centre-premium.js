@@ -1,5 +1,5 @@
 import './energy-command-centre-panel.js';
-import { overviewSceneStyles, renderEnergyScene } from './overview/energy-scene.js';
+import { realisticSceneStyles, renderRealisticScene } from './overview/realistic-scene.js';
 import { detailDrawerStyles, renderDetailDrawer } from './overview/details.js';
 
 const Panel = customElements.get('energy-command-centre-panel');
@@ -23,11 +23,11 @@ const baseRender = prototype._render;
 
 if (!prototype.__eccPremiumOverviewInstalled) {
   prototype._styles = function premiumStyles() {
-    return `${baseStyles.call(this)}\n${overviewSceneStyles()}\n${detailDrawerStyles()}`;
+    return `${baseStyles.call(this)}\n${realisticSceneStyles()}\n${detailDrawerStyles()}`;
   };
 
   prototype._overview = function premiumOverview() {
-    const scene = renderEnergyScene(this._snapshot, this._hass);
+    const scene = renderRealisticScene(this._snapshot);
     const drawer = this._eccDetailRole ? renderDetailDrawer(this._snapshot, this._eccDetailRole) : '';
     return `${scene}${drawer}`;
   };

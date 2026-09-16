@@ -4,7 +4,7 @@ from pathlib import Path
 
 DOMAIN = "energy_command_centre"
 NAME = "Energy Command Centre"
-VERSION = "0.1.0-alpha.4"
+VERSION = "0.1.0-alpha.5"
 
 PANEL_URL = "energy-command-centre"
 PANEL_ELEMENT = "energy-command-centre-panel"
