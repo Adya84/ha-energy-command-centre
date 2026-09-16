@@ -1,6 +1,7 @@
 import { formatPower } from './formatters.js';
+import { HOUSE_IMAGE_DATA_URL } from './house-image.js';
 
-const PHOTO_URL = '/energy_command_centre_scene/house.webp?v=0.1.0-alpha.6';
+const PHOTO_URL = HOUSE_IMAGE_DATA_URL;
 
 const safe = (value) => String(value ?? '—')
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
