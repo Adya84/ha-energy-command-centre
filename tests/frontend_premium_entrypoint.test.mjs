@@ -9,7 +9,7 @@ const wrapper = fs.readFileSync(wrapperPath, 'utf8');
 const init = fs.readFileSync(initPath, 'utf8');
 
 assert.match(wrapper, /energy-command-centre-panel\.js/);
-assert.match(wrapper, /overview\/energy-scene\.js/);
-assert.match(wrapper, /renderEnergyScene/);
-assert.match(wrapper, /overviewSceneStyles/);
+assert.match(wrapper, /overview\/realistic-scene\.js/);
+assert.match(wrapper, /renderRealisticScene/);
+assert.match(wrapper, /realisticSceneStyles/);
 assert.match(init, /energy-command-centre-premium\.js\?v=\{VERSION\}/);

@@ -10,6 +10,7 @@ Realistic Overview test build.
 - Equipment remains clickable/tappable and opens the live detail drawer.
 - Existing Battery Lab, Inverter, System Health, Raw Data and Settings pages are preserved.
 - Responsive scaling keeps the scene usable on desktop, tablet and mobile.
+- Frontend contract tests now validate the realistic renderer rather than the retired SVG scene.
 
 ## Testing
 
