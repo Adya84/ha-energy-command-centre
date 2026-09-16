@@ -3,13 +3,19 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const SCENE_URL = new URL('../custom_components/energy_command_centre/frontend/overview/realistic-scene.js', import.meta.url);
-const CONST_URL = new URL('../custom_components/energy_command_centre/const.py', import.meta.url);
+const IMAGE_URL = new URL('../custom_components/energy_command_centre/frontend/overview/house-image.js', import.meta.url);
 
-test('realistic overview uses explicitly registered premium house asset and live equipment cards', async () => {
+test('realistic overview bundles the approved house image and does not depend on an HTTP image route', async () => {
+  const scene = await readFile(SCENE_URL, 'utf8');
+  const image = await readFile(IMAGE_URL, 'utf8');
+  assert.match(scene, /HOUSE_IMAGE_DATA_URL/);
+  assert.doesNotMatch(scene, /energy_command_centre_scene\/house\.webp/);
+  assert.match(image, /data:image\/(?:jpeg|webp);base64,/);
+  assert.ok(image.length > 10000, 'bundled house image should contain real image data');
+});
+
+test('realistic overview keeps live equipment cards', async () => {
   const source = await readFile(SCENE_URL, 'utf8');
-  const constants = await readFile(CONST_URL, 'utf8');
-  assert.match(source, /\/energy_command_centre_scene\/house\.webp\?v=0\.1\.0-alpha\.6/);
-  assert.match(constants, /energy_command_centre_scene\/house\.webp/);
   assert.match(source, /ecc-photo-stage/);
   for (const id of ['ecc-solar-array','ecc-grid','ecc-house','ecc-inverter','ecc-battery-bank','ecc-ev-car']) {
     assert.match(source, new RegExp(`id=["']${id}["']`));
