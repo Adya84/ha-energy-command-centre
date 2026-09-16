@@ -1,5 +1,9 @@
 # Energy Command Centre
 
+<p align="center">
+  <img src="custom_components/energy_command_centre/brand/icon@2x.png" width="240" alt="Energy Command Centre logo">
+</p>
+
 An independent, manufacturer-neutral Home Assistant energy command centre. It combines data already available in Home Assistant into a modern sidebar dashboard with automatic entity discovery, battery cell visibility and system-health checks.
 
 > Early alpha: the current build is read-only and intended for development testing.
