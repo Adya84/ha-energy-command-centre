@@ -1,6 +1,6 @@
 import { formatPower } from './formatters.js';
 
-const PHOTO_URL = '/energy_command_centre_static/assets/ecc-house-premium.webp';
+const PHOTO_URL = '/energy_command_centre_scene/house.webp?v=0.1.0-alpha.6';
 
 const safe = (value) => String(value ?? '—')
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -28,7 +28,7 @@ const stateLine = (entity, fallback) => entity?.available === false ? 'Unavailab
 export function realisticSceneStyles() {
   return `
     .ecc-photo-overview{display:grid;gap:14px}
-    .ecc-photo-stage{position:relative;aspect-ratio:1672/941;min-height:520px;overflow:hidden;border-radius:24px;border:1px solid #314950;background:#081116 url("${PHOTO_URL}") center/cover no-repeat;box-shadow:0 28px 80px #0008}
+    .ecc-photo-stage{position:relative;aspect-ratio:1672/941;min-height:520px;overflow:hidden;border-radius:24px;border:1px solid #314950;background-color:#081116;background-image:url("${PHOTO_URL}");background-position:center;background-size:cover;background-repeat:no-repeat;box-shadow:0 28px 80px #0008}
     .ecc-live-card{position:absolute;z-index:3;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;min-width:150px;padding:11px 13px;border:1px solid #ffffff2c;border-radius:15px;background:rgba(5,12,16,.93);box-shadow:0 10px 28px #0008;backdrop-filter:blur(12px);color:#fff;cursor:pointer;transition:transform .18s ease,border-color .18s ease}
     .ecc-live-card:hover,.ecc-live-card:focus{transform:translateY(-2px);border-color:#ffffff66;outline:none}
     .ecc-live-icon{font-size:23px;line-height:1}.ecc-live-card small{display:block;color:#b6c7cc;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.ecc-live-card strong{display:block;font-size:18px;line-height:1.2;margin-top:2px}.ecc-live-card em{display:block;color:#91a7ad;font-size:10px;font-style:normal;margin-top:2px}
