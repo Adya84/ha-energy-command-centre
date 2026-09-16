@@ -19,4 +19,6 @@ Premium Overview test build.
 
 After updating, restart Home Assistant, hard-refresh the browser/app frontend and open **Energy Hub** from the sidebar.
 
+Release creation is gated by frontend tests, HACS validation and Hassfest on the exact release commit.
+
 This remains an early read-only alpha. It does not write inverter settings or alter energy devices.
