@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Energy Command Centre",
+        "description": "Energy Command Centre discovers your existing energy entities automatically. No inverter settings are changed during setup."
+      }
+    },
+    "abort": {
+      "already_configured": "Energy Command Centre is already configured."
+    }
+  }
+}
