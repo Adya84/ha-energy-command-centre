@@ -1,4 +1,5 @@
 const WS_TYPE = "energy_command_centre/overview";
+const BRAND_ICON = "/energy_command_centre_brand/icon.png?v=0.1.0-alpha.2";
 
 const ICONS = {
   overview: "⌁",
@@ -113,7 +114,8 @@ class EnergyCommandCentrePanel extends HTMLElement {
       button,input { font:inherit; }
       .app { min-height:100vh; background:radial-gradient(circle at 72% -15%,#16424b 0,transparent 36%),linear-gradient(160deg,#071013 0%,#091418 55%,#061013 100%); }
       .topbar { height:72px; display:flex; align-items:center; gap:18px; padding:0 28px; border-bottom:1px solid #1c3035; background:#071114db; backdrop-filter:blur(18px); position:sticky; top:0; z-index:5; }
-      .brand-mark { width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:linear-gradient(145deg,var(--green),#2ca8a4); color:#06211a; font-size:23px; font-weight:900; box-shadow:0 0 26px #58e19d33; }
+      .brand-mark { width:48px; height:48px; display:grid; place-items:center; flex:0 0 48px; }
+      .brand-logo { width:48px; height:48px; display:block; object-fit:contain; filter:drop-shadow(0 0 10px #58e19d3d); }
       .brand { line-height:1.1; min-width:180px; }.brand strong{display:block;font-size:16px;letter-spacing:.02em}.brand span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.13em}
       .top-status { margin-left:auto; display:flex; align-items:center; gap:18px; color:var(--muted); font-size:13px; }
       .online { display:flex;align-items:center;gap:8px;color:#b8c9c7}.online::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
@@ -270,7 +272,7 @@ class EnergyCommandCentrePanel extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `<style>${this._styles()}</style><div class="app"><header class="topbar"><div class="brand-mark">ϟ</div><div class="brand"><strong>Energy Command Centre</strong><span>Universal energy console</span></div><div class="top-status"><span>${this._snapshot ? `Updated ${new Date(this._snapshot.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : "Starting…"}</span><span class="online">Local connection</span><button class="refresh">Refresh</button></div></header><div class="layout">${this._nav()}<main>${this._error ? `<div class="notice">${safe(this._error)}</div>` : ""}${this._content()}</main></div></div>`;
+    this.shadowRoot.innerHTML = `<style>${this._styles()}</style><div class="app"><header class="topbar"><div class="brand-mark"><img class="brand-logo" src="${BRAND_ICON}" alt=""></div><div class="brand"><strong>Energy Command Centre</strong><span>Universal energy console</span></div><div class="top-status"><span>${this._snapshot ? `Updated ${new Date(this._snapshot.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : "Starting…"}</span><span class="online">Local connection</span><button class="refresh">Refresh</button></div></header><div class="layout">${this._nav()}<main>${this._error ? `<div class="notice">${safe(this._error)}</div>` : ""}${this._content()}</main></div></div>`;
     this.shadowRoot.querySelectorAll("[data-page]").forEach((button) => button.addEventListener("click", () => { this._active = button.dataset.page; this._render(); }));
     this.shadowRoot.querySelector(".refresh")?.addEventListener("click", () => this._refresh());
     this.shadowRoot.querySelector(".search")?.addEventListener("input", (event) => { this._search = event.target.value; this._render(); const input = this.shadowRoot.querySelector(".search"); input?.focus(); input?.setSelectionRange(this._search.length, this._search.length); });
