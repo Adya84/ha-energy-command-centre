@@ -4,7 +4,6 @@ import { readFile } from 'node:fs/promises';
 
 const DETAILS_URL = new URL('../custom_components/energy_command_centre/frontend/overview/details.js', import.meta.url);
 const PREMIUM_URL = new URL('../custom_components/energy_command_centre/frontend/energy-command-centre-premium.js', import.meta.url);
-const SCENE_URL = new URL('../custom_components/energy_command_centre/frontend/overview/energy-scene.js', import.meta.url);
 
 test('overview detail drawer renders live equipment information', async () => {
   const { renderDetailDrawer } = await import(DETAILS_URL.href);
@@ -22,16 +21,24 @@ test('overview detail drawer renders live equipment information', async () => {
   assert.match(html, /data-ecc-close-detail/);
 });
 
-test('scene exposes equipment hit targets for all main energy roles', async () => {
-  const source = await readFile(SCENE_URL, 'utf8');
-  for (const role of ['solar', 'grid', 'home', 'inverter', 'battery', 'ev']) {
-    assert.match(source, new RegExp(`data-ecc-role=["']${role}["']`));
+test('premium entrypoint maps all visible equipment to interactive energy roles', async () => {
+  const source = await readFile(PREMIUM_URL, 'utf8');
+  for (const [id, role] of [
+    ['ecc-solar-array', 'solar'],
+    ['ecc-grid', 'grid'],
+    ['ecc-house', 'home'],
+    ['ecc-inverter', 'inverter'],
+    ['ecc-battery-bank', 'battery'],
+    ['ecc-ev-car', 'ev'],
+  ]) {
+    assert.match(source, new RegExp(`${id}['\"]\\s*:\\s*['\"]${role}`));
   }
 });
 
-test('premium entrypoint binds overview equipment clicks and close action', async () => {
+test('premium entrypoint binds equipment clicks and drawer close action', async () => {
   const source = await readFile(PREMIUM_URL, 'utf8');
-  assert.match(source, /data-ecc-role/);
+  assert.match(source, /dataset\.eccRole/);
   assert.match(source, /data-ecc-close-detail/);
   assert.match(source, /_eccDetailRole/);
+  assert.match(source, /keydown/);
 });
