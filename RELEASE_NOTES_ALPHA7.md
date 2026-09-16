@@ -10,6 +10,7 @@ Realistic house runtime fix.
 - Keeps live Solar, Home, Grid, Battery, EV and Inverter overlays and clickable equipment.
 - Keeps Battery Lab, Inverter, System Health, Raw Data and Settings.
 - Removes the now-unnecessary dedicated house static route.
+- Adds a regression test that fails if the realistic scene goes back to an external house-image URL.
 
 ## Testing
 
