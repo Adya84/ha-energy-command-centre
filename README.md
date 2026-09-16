@@ -4,6 +4,10 @@ An independent, manufacturer-neutral Home Assistant energy command centre. It co
 
 > Early alpha: the current build is read-only and intended for development testing.
 
+## Installation
+
+See the complete **[installation guide](INSTALL.md)** for HACS, manual installation, updating and troubleshooting.
+
 ## Current alpha features
 
 - Native Home Assistant configuration flow
