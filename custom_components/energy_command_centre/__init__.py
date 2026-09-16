@@ -17,6 +17,7 @@ from .const import (
     PANEL_URL,
     STATIC_URL,
     VERSION,
+    static_assets,
 )
 from .websocket import async_register_websocket_api
 
@@ -29,9 +30,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up shared frontend resources and WebSocket API."""
     hass.data.setdefault(DOMAIN, {})
     if not hass.data[DOMAIN].get("resources_registered"):
-        await hass.http.async_register_static_paths(
-            [StaticPathConfig(STATIC_URL, str(FRONTEND_PATH), False)]
+        paths = [StaticPathConfig(STATIC_URL, str(FRONTEND_PATH), False)]
+        paths.extend(
+            StaticPathConfig(url, str(path), False) for url, path in static_assets().items()
         )
+        await hass.http.async_register_static_paths(paths)
         async_register_websocket_api(hass)
         hass.data[DOMAIN]["resources_registered"] = True
     return True
