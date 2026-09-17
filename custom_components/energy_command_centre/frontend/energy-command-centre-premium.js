@@ -1,5 +1,10 @@
 import './energy-command-centre-panel.js';
-import { realisticSceneStyles, renderRealisticScene } from './overview/realistic-scene.js';
+import {
+  bindHasEvControl,
+  readHasEv,
+  realisticSceneStyles,
+  renderRealisticScene,
+} from './overview/realistic-scene.js';
 import { detailDrawerStyles, renderDetailDrawer } from './overview/details.js';
 
 const Panel = customElements.get('energy-command-centre-panel');
@@ -27,13 +32,18 @@ if (!prototype.__eccPremiumOverviewInstalled) {
   };
 
   prototype._overview = function premiumOverview() {
-    const scene = renderRealisticScene(this._snapshot);
+    const scene = renderRealisticScene(this._snapshot, { hasEv: readHasEv() });
     const drawer = this._eccDetailRole ? renderDetailDrawer(this._snapshot, this._eccDetailRole) : '';
     return `${scene}${drawer}`;
   };
 
   prototype._bindPremiumOverview = function bindPremiumOverview() {
     if (this._active !== 'overview' || !this.shadowRoot) return;
+
+    bindHasEvControl(this.shadowRoot, () => {
+      this._eccDetailRole = null;
+      this._render();
+    });
 
     const openRole = (role) => {
       this._eccDetailRole = role;
