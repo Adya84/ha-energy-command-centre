@@ -3,89 +3,14 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .classifier import CELL_RE, category_for, cell_number_for, manufacturer_for
 from .const import ENERGY_TERMS
-
-
-def _float_or_none(value: Any) -> float | None:
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError):
-        return None
-    return parsed
-
-
-def _matching_state(hass: HomeAssistant, *terms: str) -> State | None:
-    candidates: list[tuple[int, State]] = []
-    for state in hass.states.async_all():
-        text = f"{state.entity_id} {state.attributes.get('friendly_name', '')}".lower()
-        score = sum(2 for term in terms if term in text)
-        if score:
-            candidates.append((score, state))
-    candidates.sort(key=lambda item: (-item[0], item[1].entity_id))
-    return candidates[0][1] if candidates else None
-
-
-def discover_environment(hass: HomeAssistant) -> dict[str, Any]:
-    """Return sun, wind and optional forecast data used by the live scene."""
-    sun_state = hass.states.get("sun.sun")
-    sun = None
-    if sun_state:
-        sun = {"state": sun_state.state}
-        for key in (
-            "next_rising",
-            "next_setting",
-            "previous_rising",
-            "previous_setting",
-            "elevation",
-            "azimuth",
-        ):
-            sun[key] = sun_state.attributes.get(key)
-
-    wind_speed = _matching_state(hass, "wind speed", "wind_speed")
-    wind_bearing = _matching_state(hass, "wind bearing", "wind_bearing", "wind direction")
-    weather = next(
-        (state for state in hass.states.async_all() if state.entity_id.startswith("weather.")),
-        None,
-    )
-    if wind_speed:
-        wind_value = _float_or_none(wind_speed.state)
-        wind_unit = wind_speed.attributes.get("unit_of_measurement")
-        source_entity = wind_speed.entity_id
-    else:
-        wind_value = _float_or_none(weather.attributes.get("wind_speed")) if weather else None
-        wind_unit = weather.attributes.get("wind_speed_unit") if weather else None
-        source_entity = weather.entity_id if weather else None
-    bearing = _float_or_none(wind_bearing.state) if wind_bearing else None
-    if bearing is None and weather:
-        bearing = _float_or_none(weather.attributes.get("wind_bearing"))
-
-    moon = _matching_state(hass, "moon phase", "moon_phase")
-    forecast = _matching_state(
-        hass,
-        "solar forecast remaining",
-        "remaining today",
-        "forecast remaining",
-    )
-    return {
-        "sun": sun,
-        "wind": {
-            "value": wind_value,
-            "unit": wind_unit,
-            "bearing": bearing,
-            "source_entity": source_entity,
-            "available": wind_value is not None,
-        },
-        "moon_phase": moon.state if moon and moon.state not in ("unknown", "unavailable") else None,
-        "solar_forecast_remaining_kwh": _float_or_none(forecast.state) if forecast else None,
-    }
 
 
 def _text_for(state: State, registry_entry: er.RegistryEntry | None) -> str:
@@ -114,7 +39,7 @@ def _serialise_state(
     text = _text_for(state, registry_entry)
     updated = state.last_updated
     stale_seconds = max(
-        0, int((datetime.now(UTC) - updated).total_seconds())
+        0, int((datetime.now(timezone.utc) - updated).total_seconds())
     )
     return {
         "entity_id": state.entity_id,
@@ -159,9 +84,8 @@ def discover_energy_entities(hass: HomeAssistant) -> dict[str, Any]:
     stale = sum(item["stale_seconds"] > 900 for item in entities)
 
     return {
-        "generated_at": datetime.now(UTC).isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "entities": entities,
-        "environment": discover_environment(hass),
         "summary": {
             "total": len(entities),
             "available": len(entities) - unavailable,

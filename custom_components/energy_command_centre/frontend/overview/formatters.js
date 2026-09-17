@@ -1,44 +1,37 @@
-const finite = (value) => {
-  if (value === null || value === undefined || value === "") return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+export const entityValue = (entity) => {
+  if (!entity || entity.available === false) return null;
+  const value = Number.parseFloat(entity.state);
+  return Number.isFinite(value) ? value : null;
 };
 
-export function formatPower(watts) {
-  const value = finite(watts);
-  if (value === null) return "Unavailable";
-  const magnitude = Math.abs(value);
-  if (magnitude < 1000) return `${Math.round(magnitude)} W`;
-  const kilowatts = magnitude / 1000;
-  const decimals = kilowatts >= 10 ? 1 : 2;
-  return `${kilowatts.toFixed(decimals).replace(/\.0+$/, "")} kW`;
-}
+export const watts = (entity) => {
+  const value = entityValue(entity);
+  if (value === null) return null;
+  const unit = String(entity?.unit || 'W').toLowerCase();
+  return unit === 'kw' ? value * 1000 : value;
+};
 
-export function windToMph(value, unit) {
-  const speed = finite(value);
-  if (speed === null) return null;
-  const normalised = String(unit || "mph").toLowerCase().replaceAll(" ", "");
-  if (["km/h", "kmh", "kph"].includes(normalised)) return speed * 0.621371;
-  if (["m/s", "mps", "ms-1"].includes(normalised)) return speed * 2.23694;
-  if (["kn", "kt", "knot", "knots"].includes(normalised)) return speed * 1.15078;
-  return speed;
-}
+export const formatPower = (entity, fallback = 'Unavailable') => {
+  const value = watts(entity);
+  if (value === null) return fallback;
+  const abs = Math.abs(value);
+  if (abs < 1000) return `${Math.round(abs)} W`;
+  const kw = abs / 1000;
+  return `${Number(kw.toFixed(2)).toString()} kW`;
+};
 
-export function formatWindMph(value, unit) {
-  const mph = windToMph(value, unit);
-  return mph === null ? "Unavailable" : `${mph.toFixed(1)} mph`;
-}
+export const direction = (value, positiveName, negativeName) => {
+  if (!Number.isFinite(value) || Math.abs(value) < 1) return 'idle';
+  return value > 0 ? positiveName : negativeName;
+};
 
-export function solarProgress(environment = {}, now = new Date()) {
-  const sun = environment.sun || {};
-  const isDay = sun.state === "above_horizon";
-  const start = new Date(isDay ? sun.previous_rising : sun.previous_setting).getTime();
-  const end = new Date(isDay ? sun.next_setting : sun.next_rising).getTime();
-  const current = now.getTime();
-  const valid = Number.isFinite(start) && Number.isFinite(end) && end > start;
-  return {
-    mode: isDay ? "day" : "night",
-    progress: valid ? Math.min(1, Math.max(0, (current - start) / (end - start))) : 0,
-    remainingMs: valid ? Math.max(0, end - current) : null,
-  };
-}
+export const windMph = (value, unit = 'mph') => {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  const normal = String(unit).toLowerCase().replace('kph', 'km/h');
+  if (normal === 'mph') return number;
+  if (normal === 'km/h' || normal === 'kmh') return number * 0.621371;
+  if (normal === 'm/s' || normal === 'mps') return number * 2.23694;
+  if (normal === 'kn' || normal === 'knot' || normal === 'knots') return number * 1.15078;
+  return null;
+};
