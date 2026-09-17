@@ -4,9 +4,23 @@ const finite = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-export function formatPower(watts) {
-  const value = finite(watts);
-  if (value === null) return "Unavailable";
+export function watts(entity) {
+  if (entity?.available === false) return null;
+  const raw = typeof entity === "object" ? entity?.state : entity;
+  const value = finite(raw);
+  if (value === null) return null;
+  const unit = typeof entity === "object" ? String(entity?.unit || "W").toLowerCase() : "w";
+  return unit === "kw" ? value * 1000 : value;
+}
+
+export function entityValue(entity) {
+  if (entity?.available === false) return null;
+  return typeof entity === "object" ? entity?.state : entity;
+}
+
+export function formatPower(entity, fallback = "Unavailable") {
+  const value = watts(entity);
+  if (value === null) return fallback;
   const magnitude = Math.abs(value);
   if (magnitude < 1000) return `${Math.round(magnitude)} W`;
   const kilowatts = magnitude / 1000;
@@ -22,6 +36,14 @@ export function windToMph(value, unit) {
   if (["m/s", "mps", "ms-1"].includes(normalised)) return speed * 2.23694;
   if (["kn", "kt", "knot", "knots"].includes(normalised)) return speed * 1.15078;
   return speed;
+}
+
+export const windMph = windToMph;
+
+export function direction(value, positive, negative) {
+  const numeric = finite(value);
+  if (numeric === null || numeric === 0) return "idle";
+  return numeric > 0 ? positive : negative;
 }
 
 export function formatWindMph(value, unit) {
