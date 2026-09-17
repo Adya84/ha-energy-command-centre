@@ -1,0 +1,1 @@
+Alpha.8 uses a real img element for the bundled realistic house scene.
