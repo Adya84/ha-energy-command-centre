@@ -6,6 +6,11 @@ DOMAIN = "energy_command_centre"
 NAME = "Energy Command Centre"
 VERSION = "0.1.0-alpha.13"
 
+CONF_HOST = "host"
+CONF_PORT = "port"
+DEFAULT_PORT = 8899
+DEFAULT_SCAN_INTERVAL = 5
+
 PANEL_URL = "energy-command-centre"
 PANEL_ELEMENT = "energy-command-centre-panel"
 STATIC_URL = "/energy_command_centre_static"
@@ -19,6 +24,9 @@ EV_PATH = FRONTEND_PATH / "assets" / "ecc-ev-overlay.png"
 
 WS_OVERVIEW = "energy_command_centre/overview"
 
+KOFI_URL = "https://ko-fi.com/ady1984"
+BUY_ME_A_BEER_URL = "https://paypal.me/graffidoodle"
+
 
 def static_assets() -> dict[str, Path]:
     """Return individually exposed static assets."""
@@ -29,6 +37,8 @@ def static_assets() -> dict[str, Path]:
     }
 
 
+# Retained only for explicitly separate optional enrichment/discovery helpers.
+# Primary inverter, solar, grid, house and battery data must not use this list.
 ENERGY_TERMS = (
     "givenergy",
     "givtcp",
