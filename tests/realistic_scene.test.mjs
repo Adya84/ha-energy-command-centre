@@ -6,22 +6,27 @@ import * as realisticScene from '../custom_components/energy_command_centre/fron
 const { renderRealisticScene } = realisticScene;
 
 const SCENE_URL = new URL('../custom_components/energy_command_centre/frontend/overview/realistic-scene.js', import.meta.url);
-const IMAGE_URL = new URL('../custom_components/energy_command_centre/frontend/assets/ecc-house-clean.png', import.meta.url);
+const IMAGE_URL = new URL('../custom_components/energy_command_centre/frontend/assets/ecc-house-clean-v2.png', import.meta.url);
+const EV_IMAGE_URL = new URL('../custom_components/energy_command_centre/frontend/assets/ecc-ev-overlay.png', import.meta.url);
 const CONST_URL = new URL('../custom_components/energy_command_centre/const.py', import.meta.url);
 
-test('realistic overview serves the complete approved PNG through an explicit static route', async () => {
+test('realistic overview serves a clean no-car background and a separately addressable EV overlay', async () => {
   const scene = await readFile(SCENE_URL, 'utf8');
   const image = await readFile(IMAGE_URL);
+  const evImage = await readFile(EV_IMAGE_URL);
   const constants = await readFile(CONST_URL, 'utf8');
   const imageStats = await stat(IMAGE_URL);
 
   assert.match(scene, /energy_command_centre_scene\/house\.png\?v=0\.1\.0-alpha\.12/);
+  assert.match(scene, /energy_command_centre_scene\/ev\.png\?v=0\.1\.0-alpha\.12/);
   assert.match(constants, /HOUSE_STATIC_URL = "\/energy_command_centre_scene\/house\.png"/);
-  assert.match(constants, /HOUSE_PATH = FRONTEND_PATH \/ "assets" \/ "ecc-house-clean\.png"/);
+  assert.match(constants, /HOUSE_PATH = FRONTEND_PATH \/ "assets" \/ "ecc-house-clean-v2\.png"/);
+  assert.match(constants, /EV_PATH = FRONTEND_PATH \/ "assets" \/ "ecc-ev-overlay\.png"/);
   assert.doesNotMatch(scene, /background-image\s*:\s*url/);
   assert.match(scene, /<img[^>]+class=["']ecc-house-photo["'][^>]+src=["']\$\{PHOTO_URL\}["']/);
   assert.match(scene, /\.ecc-house-photo\{[^}]*position:absolute[^}]*object-fit:cover/);
   assert.deepEqual([...image.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.deepEqual([...evImage.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.ok(imageStats.size > 1_000_000, 'approved house image must not be a truncated placeholder');
 });
 
@@ -151,6 +156,7 @@ test('I have an EV control removes every EV overlay and remembers the choice', (
   const visible = renderRealisticScene({ entities: [] }, { hasEv: readHasEv(storage) });
   assert.match(visible, /<input[^>]+id="ecc-has-ev"[^>]+checked/);
   assert.match(visible, /id="ecc-ev-car"/);
+  assert.match(visible, /class="ecc-ev-vehicle"/);
   assert.match(visible, /data-flow="ev"/);
 });
 

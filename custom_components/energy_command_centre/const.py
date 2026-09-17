@@ -13,7 +13,9 @@ FRONTEND_PATH = Path(__file__).parent / "frontend"
 BRAND_STATIC_URL = "/energy_command_centre_brand"
 BRAND_PATH = Path(__file__).parent / "brand"
 HOUSE_STATIC_URL = "/energy_command_centre_scene/house.png"
-HOUSE_PATH = FRONTEND_PATH / "assets" / "ecc-house-clean.png"
+HOUSE_PATH = FRONTEND_PATH / "assets" / "ecc-house-clean-v2.png"
+EV_STATIC_URL = "/energy_command_centre_scene/ev.png"
+EV_PATH = FRONTEND_PATH / "assets" / "ecc-ev-overlay.png"
 
 WS_OVERVIEW = "energy_command_centre/overview"
 
@@ -23,6 +25,7 @@ def static_assets() -> dict[str, Path]:
     return {
         f"{BRAND_STATIC_URL}/icon.png": BRAND_PATH / "icon.png",
         HOUSE_STATIC_URL: HOUSE_PATH,
+        EV_STATIC_URL: EV_PATH,
     }
 
 
