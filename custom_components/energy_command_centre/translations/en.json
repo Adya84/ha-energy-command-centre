@@ -2,12 +2,29 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Energy Command Centre",
-        "description": "Energy Command Centre discovers your existing energy entities automatically. No inverter settings are changed during setup."
+        "title": "Connect your inverter",
+        "description": "Enter the local IP address of your GivEnergy inverter or data adapter. Energy Command Centre reads inverter, solar, grid, house and battery data directly over your local network.",
+        "data": {
+          "host": "Inverter IP address",
+          "port": "Modbus port"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconnect inverter",
+        "description": "Update the local inverter connection. The default GivEnergy Modbus port is 8899.",
+        "data": {
+          "host": "Inverter IP address",
+          "port": "Modbus port"
+        }
       }
     },
+    "error": {
+      "cannot_connect": "Could not connect to that IP address and port.",
+      "detection_failed": "The device responded, but Energy Command Centre could not identify a supported GivEnergy inverter.",
+      "wrong_inverter": "That address belongs to a different inverter. Remove and add the integration again to change inverter."
+    },
     "abort": {
-      "already_configured": "Energy Command Centre is already configured."
+      "already_configured": "This inverter is already configured."
     }
   }
 }
