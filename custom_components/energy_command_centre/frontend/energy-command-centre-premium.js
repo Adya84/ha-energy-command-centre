@@ -22,14 +22,31 @@ const EQUIPMENT_ROLES = {
   'ecc-ev-car': 'ev',
 };
 
-const NAV_LABELS = {
-  overview: 'Dashboard',
-  battery: 'Battery Centre',
-  inverter: 'Inverter Details',
-  health: 'Diagnostics',
-  raw: 'Register Data',
-  settings: 'Settings & Support',
-};
+const NAV_ITEMS = [
+  ['overview', '⌁', 'Dashboard'],
+  ['battery', '▰', 'Battery Centre'],
+  ['inverter', 'ϟ', 'Inverter Details'],
+  ['health', '♡', 'Diagnostics'],
+  ['raw', '⌕', 'Register Data'],
+  ['settings', '⚙', 'Settings & Support'],
+];
+
+const html = (value) => String(value ?? '—')
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
+
+const supportMarkup = () => `
+  <div class="ecc-support">
+    <strong>ECC is completely free</strong>
+    <p>All features are unlocked. If ECC helps you, optional donations support future development.</p>
+    <div class="ecc-support-links">
+      <a href="https://ko-fi.com/ady1984" target="_blank" rel="noopener noreferrer">☕ Ko-fi</a>
+      <a href="https://paypal.me/graffidoodle" target="_blank" rel="noopener noreferrer">🍺 Buy me a beer</a>
+    </div>
+  </div>`;
 
 const metricEntity = (entity_id, name, category, metric) => {
   if (!metric || metric.available === false || metric.value == null) return null;
@@ -105,6 +122,11 @@ const adaptSnapshot = (snapshot) => {
   };
 };
 
+const metricValue = (metric) => {
+  if (!metric || metric.available === false || metric.value == null) return 'Unavailable';
+  return `${metric.value}${metric.unit ? ` ${metric.unit}` : ''}`;
+};
+
 const prototype = Panel.prototype;
 const baseStyles = prototype._styles;
 const baseRender = prototype._render;
@@ -118,8 +140,15 @@ if (!prototype.__eccDashboardOverviewInstalled) {
       .ecc-support-links{display:flex;flex-wrap:wrap;gap:7px}
       .ecc-support a{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid #355f52;border-radius:9px;background:#0b1816;color:#eafff6;text-decoration:none;font-weight:800}
       .ecc-support a:hover{border-color:#58e19d}
+      .ecc-code{margin:0;max-height:62vh;overflow:auto;padding:15px;border-radius:12px;background:#071114;border:1px solid #1b3035;color:#c7ded8;font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word}
       @media(max-width:1000px){.ecc-support{display:none}}
     `;
+  };
+
+  prototype._nav = function eccNavigation() {
+    return `<nav><div class="nav-label">Energy Command Centre</div>${NAV_ITEMS.map(([key, icon, label]) => `
+      <button class="nav-btn ${this._active === key ? 'active' : ''}" data-page="${key}"><i>${icon}</i><span>${label}</span></button>
+    `).join('')}${supportMarkup()}</nav>`;
   };
 
   prototype._overview = function dashboardOverview() {
@@ -128,29 +157,51 @@ if (!prototype.__eccDashboardOverviewInstalled) {
     return `${scene}${drawer}`;
   };
 
+  prototype._health = function diagnosticsPage() {
+    const connection = this._snapshot?.connection || {};
+    const inverter = this._snapshot?.inverter || {};
+    const batteries = this._snapshot?.batteries || [];
+    const online = connection.state === 'online';
+    return `<div class="heading"><div><div class="eyebrow">Direct local connection</div><h1>Diagnostics</h1><p>Connection, detected hardware and direct-inverter health</p></div></div><div class="grid">
+      ${this._metric('Connection', html(connection.state || 'Unknown'), online ? 'Direct inverter link online' : html(connection.last_error || 'Check inverter IP'), online ? 'accent' : 'yellow')}
+      ${this._metric('Inverter', html(inverter.model || 'Detecting'), html(inverter.serial || 'Serial unavailable'))}
+      ${this._metric('Batteries', batteries.length, 'Detected directly from the plant', 'accent')}
+      ${this._metric('Source', 'Direct IP', `${html(connection.host || 'Not configured')}:${html(connection.port || '8899')}`, 'cyan')}
+      <section class="card span-12"><div class="section-title"><h2>Connection details</h2><span class="pill">Read only</span></div><div class="status-list">
+        ${this._statusRow('Connection state', connection.state || 'unknown', online ? 'good' : 'bad')}
+        ${this._statusRow('Stale data', connection.stale ? 'Yes' : 'No', connection.stale ? 'warn' : 'good')}
+        ${this._statusRow('Latest error', connection.last_error || 'None', connection.last_error ? 'warn' : 'good')}
+        ${this._statusRow('Firmware', inverter.firmware || 'Unavailable', inverter.firmware ? 'good' : 'warn')}
+        ${this._statusRow('Fault code', inverter.fault_code || '0000', inverter.fault_code && inverter.fault_code !== '0000' ? 'bad' : 'good')}
+        ${this._statusRow('Warning code', inverter.warning_code || '0000', inverter.warning_code && inverter.warning_code !== '0000' ? 'warn' : 'good')}
+      </div></section>
+    </div>`;
+  };
+
+  prototype._raw = function registerDataPage() {
+    const raw = this._snapshot?.diagnostics?.raw_plant || {};
+    return `<div class="heading"><div><div class="eyebrow">Read-only plant data</div><h1>Register Data</h1><p>Detailed information returned directly by the inverter and attached devices</p></div></div><div class="grid">
+      <section class="card span-12"><div class="section-title"><h2>Normalised live values</h2><span class="pill">Direct IP</span></div>${this._entityTable(this._snapshot?.entities || [], 'Direct inverter values')}</section>
+      <section class="card span-12"><div class="section-title"><h2>Plant diagnostics</h2><span class="pill">Read only</span></div><pre class="ecc-code">${html(JSON.stringify(raw, null, 2))}</pre></section>
+    </div>`;
+  };
+
+  prototype._settings = function settingsSupportPage() {
+    const connection = this._snapshot?.connection || {};
+    return `<div class="heading"><div><div class="eyebrow">Local configuration</div><h1>Settings & Support</h1><p>Direct inverter connection and optional project support</p></div></div><div class="grid">
+      <section class="card span-12"><div class="section-title"><h2>System</h2><span class="pill">Free</span></div><div class="status-list">
+        ${this._statusRow('Direct inverter data', connection.state === 'online' ? 'Connected' : connection.state || 'Not configured', connection.state === 'online' ? 'good' : 'warn')}
+        ${this._statusRow('Inverter address', connection.host ? `${connection.host}:${connection.port || 8899}` : 'Reconfigure integration', connection.host ? 'good' : 'warn')}
+        ${this._statusRow('Read-only safety mode', 'Enabled', 'good')}
+        ${this._statusRow('Refresh interval', '5 seconds', 'good')}
+        ${this._statusRow('Paid feature locks', 'None — all ECC features are free', 'good')}
+      </div></section>
+      <section class="card span-12"><div class="section-title"><h2>Support development</h2></div><p style="color:var(--muted);line-height:1.7;font-size:13px;margin:0 0 14px">Energy Command Centre is free. Donations are completely optional and do not unlock any extra features.</p><div class="ecc-support-links"><a href="https://ko-fi.com/ady1984" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a><a href="https://paypal.me/graffidoodle" target="_blank" rel="noopener noreferrer">🍺 Buy me a beer</a></div></section>
+    </div>`;
+  };
+
   prototype._bindDashboardOverview = function bindDashboardOverview() {
-    if (!this.shadowRoot) return;
-
-    for (const [key, label] of Object.entries(NAV_LABELS)) {
-      const text = this.shadowRoot.querySelector(`[data-page="${key}"] span`);
-      if (text) text.textContent = label;
-    }
-    const navLabel = this.shadowRoot.querySelector('.nav-label');
-    if (navLabel) navLabel.textContent = 'Energy Command Centre';
-
-    const oldPremium = this.shadowRoot.querySelector('.premium');
-    if (oldPremium) {
-      oldPremium.className = 'ecc-support';
-      oldPremium.innerHTML = `
-        <strong>ECC is completely free</strong>
-        <p>If Energy Command Centre helps you, optional donations support future development.</p>
-        <div class="ecc-support-links">
-          <a href="https://ko-fi.com/ady1984" target="_blank" rel="noopener noreferrer">☕ Ko-fi</a>
-          <a href="https://paypal.me/graffidoodle" target="_blank" rel="noopener noreferrer">🍺 Buy me a beer</a>
-        </div>`;
-    }
-
-    if (this._active !== 'overview') return;
+    if (!this.shadowRoot || this._active !== 'overview') return;
 
     bindHasEvControl(this.shadowRoot, () => {
       this._eccDetailRole = null;
