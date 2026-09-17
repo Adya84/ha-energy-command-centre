@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .diagnostics import dump_plant
 from .inverter import normalise_plant
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,6 +59,7 @@ class EnergyCommandCentreCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 port=self.port,
                 connection="online",
             )
+            snapshot.setdefault("diagnostics", {})["raw_plant"] = dump_plant(plant)
             self._last_good = snapshot
             self._last_error = None
             return snapshot
@@ -78,6 +80,7 @@ class EnergyCommandCentreCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "stale": True,
                     "last_error": self._last_error,
                 }
+                stale.setdefault("diagnostics", {})["latest_error"] = self._last_error
                 return stale
             return {
                 "generated_at": None,
@@ -99,7 +102,7 @@ class EnergyCommandCentreCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "energy_today": {},
                 "energy_total": {},
                 "capabilities": {},
-                "diagnostics": {"latest_error": self._last_error},
+                "diagnostics": {"latest_error": self._last_error, "raw_plant": {}},
             }
 
     async def _reset_connection(self) -> None:
