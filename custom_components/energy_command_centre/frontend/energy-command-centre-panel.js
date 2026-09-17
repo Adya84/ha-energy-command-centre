@@ -1,5 +1,9 @@
+import { buildOverviewModel } from "./overview/model.js";
+import { renderEnergyScene } from "./overview/scene.js";
+import { overviewStyles } from "./overview/styles.js";
+
 const WS_TYPE = "energy_command_centre/overview";
-const BRAND_ICON = "/energy_command_centre_brand/icon.png?v=0.1.0-alpha.2";
+const BRAND_ICON = "/energy_command_centre_brand/icon.png?v=0.1.0-alpha.3";
 
 const ICONS = {
   overview: "⌁",
@@ -41,7 +45,14 @@ class EnergyCommandCentrePanel extends HTMLElement {
     this._loading = true;
     this._error = null;
     this._search = "";
+    this._selectedEquipment = null;
     this._timer = null;
+    this._escapeHandler = (event) => {
+      if (event.key === "Escape" && this._selectedEquipment) {
+        this._selectedEquipment = null;
+        this._render();
+      }
+    };
     this._render();
   }
 
@@ -55,8 +66,13 @@ class EnergyCommandCentrePanel extends HTMLElement {
   set route(_value) {}
   set panel(_value) {}
 
+  connectedCallback() {
+    globalThis.addEventListener?.("keydown", this._escapeHandler);
+  }
+
   disconnectedCallback() {
     if (this._timer) window.clearInterval(this._timer);
+    globalThis.removeEventListener?.("keydown", this._escapeHandler);
   }
 
   async _start() {
@@ -142,6 +158,7 @@ class EnergyCommandCentrePanel extends HTMLElement {
       .notice{padding:14px 16px;border-radius:13px;background:#251b1d;border:1px solid #5b2c35;color:#ffabb7;margin-bottom:18px;font-size:12px}.good-box{padding:22px;border:1px solid #2d5b4d;border-radius:16px;background:linear-gradient(145deg,#10271f,#0b1a19)}.good-box strong{font-size:18px;color:var(--green)}.good-box p{color:#a5b8b4;margin:8px 0 0;font-size:13px;line-height:1.55}
       @media(max-width:1000px){.span-3,.span-4{grid-column:span 6}.span-5,.span-7,.span-8{grid-column:span 12}.layout{grid-template-columns:78px minmax(0,1fr)}nav{padding:20px 8px}.nav-label,.nav-btn span,.premium{display:none}.nav-btn{justify-content:center;padding:13px}.nav-btn i{font-size:20px}.brand{display:none}}
       @media(max-width:680px){.topbar{padding:0 14px;height:62px}.layout{display:block;min-height:calc(100vh - 62px)}nav{position:fixed;bottom:0;left:0;right:0;z-index:10;border:0;border-top:1px solid var(--line);display:flex;justify-content:space-around;background:#081417f5;padding:7px 5px}.nav-btn{width:auto;margin:0;padding:9px 13px}.nav-btn:nth-of-type(6){display:none}main{padding:20px 13px 90px}.top-status>span:first-child{display:none}.grid{gap:11px}.card{padding:16px;border-radius:15px}.span-3,.span-4{grid-column:span 6}.metric-value{font-size:22px}.flow{min-height:330px}.heading h1{font-size:24px}.node{width:88px;min-height:66px}.solar,.home,.ev-node{left:calc(50% - 44px)}.grid-node{left:0}.battery-node{right:0}.grid-link{left:88px;width:calc(50% - 132px)}.battery-link{left:calc(50% + 44px);width:calc(50% - 132px)}.node b{font-size:15px}}
+      ${overviewStyles}
     `;
   }
 
@@ -161,39 +178,11 @@ class EnergyCommandCentrePanel extends HTMLElement {
   }
 
   _overview() {
-    const solar = this._power("solar", "power", "pv");
-    const load = this._power("load", "load", "power");
-    const grid = this._power("grid", "power", "grid");
-    const batteryPower = this._power("battery", "power", "battery");
-    const soc = this._find("battery", "soc");
-    const ev = this._power("ev", "power", "charge");
+    const model = buildOverviewModel(this._snapshot);
     const total = this._snapshot?.summary?.total || 0;
-    const unavailable = this._snapshot?.summary?.unavailable || 0;
     return `
       <div class="heading"><div><div class="eyebrow">Live energy system</div><h1>Good ${this._greeting()}</h1><p>${total} energy entities discovered automatically</p></div></div>
-      <div class="grid">
-        ${this._metric("Solar generation", display(solar), "Live PV output", "yellow")}
-        ${this._metric("Home consumption", display(load), "Current house load")}
-        ${this._metric("Battery", display(soc), display(batteryPower, "No power entity"), "accent")}
-        ${this._metric("Grid", display(grid), "Live import or export", "cyan")}
-        <section class="card span-8 flow">
-          <div class="section-title flow-title"><h2>Live power flow</h2><span class="pill">Live</span></div>
-          <div class="flow-map">
-            <div class="node solar"><b class="yellow">${safe(display(solar))}</b><small>Solar</small></div><div class="link vlink solar-link"></div>
-            <div class="node grid-node"><b class="cyan">${safe(display(grid))}</b><small>Grid</small></div><div class="link hlink grid-link"></div>
-            <div class="node home"><b>${safe(display(load))}</b><small>Home</small></div>
-            <div class="node battery-node"><b class="accent">${safe(display(batteryPower))}</b><small>Battery ${soc ? safe(soc.state) + "%" : ""}</small></div><div class="link hlink battery-link"></div>
-            <div class="link vlink ev-link"></div><div class="node ev-node"><b>${safe(display(ev, "0 W"))}</b><small>EV charger</small></div>
-          </div>
-        </section>
-        <section class="card span-4"><div class="section-title"><h2>System status</h2><span class="pill">${unavailable ? "Attention" : "Healthy"}</span></div><div class="status-list">
-          ${this._statusRow("Entity discovery", `${total} found`, total > 0 ? "good" : "warn")}
-          ${this._statusRow("Available sensors", `${total - unavailable}/${total}`, unavailable ? "warn" : "good")}
-          ${this._statusRow("Battery data", `${this._entities("battery").length} entities`, this._entities("battery").length ? "good" : "warn")}
-          ${this._statusRow("PredBat", `${this._entities("predbat").length} entities`, this._entities("predbat").length ? "good" : "warn")}
-          ${this._statusRow("EV charging", `${this._entities("ev").length} entities`, this._entities("ev").length ? "good" : "warn")}
-        </div></section>
-      </div>`;
+      ${renderEnergyScene(model, { selected: this._selectedEquipment, now: new Date() })}`;
   }
 
   _statusRow(label, value, status) {
@@ -257,7 +246,7 @@ class EnergyCommandCentrePanel extends HTMLElement {
   }
 
   _settings() {
-    return `<div class="heading"><div><div class="eyebrow">App configuration</div><h1>Settings</h1><p>Display, source mapping and future Premium options</p></div></div><div class="grid"><section class="card span-12"><div class="section-title"><h2>Development build</h2><span class="pill">v0.1 Alpha</span></div><div class="status-list">${this._statusRow("Automatic entity discovery", "Enabled", "good")}${this._statusRow("Read-only safety mode", "Enabled", "good")}${this._statusRow("Refresh interval", "5 seconds", "good")}${this._statusRow("Direct inverter connection", "Planned", "warn")}${this._statusRow("Premium licence", "Not required during development", "good")}</div></section><section class="card span-12"><div class="section-title"><h2>Coming next</h2></div><p style="color:var(--muted);line-height:1.7;font-size:13px;margin:0">This page will allow manual sensor mapping, battery naming, unit preferences, dashboard card arrangement, theme selection, control permissions and notification thresholds. Development builds keep every feature unlocked while we design and test the complete system.</p></section></div>`;
+    return `<div class="heading"><div><div class="eyebrow">App configuration</div><h1>Settings</h1><p>Display, source mapping and future Premium options</p></div></div><div class="grid"><section class="card span-12"><div class="section-title"><h2>Development build</h2><span class="pill">v0.1.0 Alpha 3</span></div><div class="status-list">${this._statusRow("Automatic entity discovery", "Enabled", "good")}${this._statusRow("Read-only safety mode", "Enabled", "good")}${this._statusRow("Refresh interval", "5 seconds", "good")}${this._statusRow("Direct inverter connection", "Planned", "warn")}${this._statusRow("Premium licence", "Not required during development", "good")}</div></section><section class="card span-12"><div class="section-title"><h2>Coming next</h2></div><p style="color:var(--muted);line-height:1.7;font-size:13px;margin:0">This page will allow manual sensor mapping, battery naming, unit preferences, dashboard card arrangement, theme selection, control permissions and notification thresholds. Development builds keep every feature unlocked while we design and test the complete system.</p></section></div>`;
   }
 
   _greeting() {
@@ -275,6 +264,8 @@ class EnergyCommandCentrePanel extends HTMLElement {
     this.shadowRoot.innerHTML = `<style>${this._styles()}</style><div class="app"><header class="topbar"><div class="brand-mark"><img class="brand-logo" src="${BRAND_ICON}" alt=""></div><div class="brand"><strong>Energy Command Centre</strong><span>Universal energy console</span></div><div class="top-status"><span>${this._snapshot ? `Updated ${new Date(this._snapshot.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : "Starting…"}</span><span class="online">Local connection</span><button class="refresh">Refresh</button></div></header><div class="layout">${this._nav()}<main>${this._error ? `<div class="notice">${safe(this._error)}</div>` : ""}${this._content()}</main></div></div>`;
     this.shadowRoot.querySelectorAll("[data-page]").forEach((button) => button.addEventListener("click", () => { this._active = button.dataset.page; this._render(); }));
     this.shadowRoot.querySelector(".refresh")?.addEventListener("click", () => this._refresh());
+    this.shadowRoot.querySelectorAll("[data-equipment]").forEach((button) => button.addEventListener("click", () => { this._selectedEquipment = button.dataset.equipment; this._render(); }));
+    this.shadowRoot.querySelector("[data-close-equipment]")?.addEventListener("click", () => { this._selectedEquipment = null; this._render(); });
     this.shadowRoot.querySelector(".search")?.addEventListener("input", (event) => { this._search = event.target.value; this._render(); const input = this.shadowRoot.querySelector(".search"); input?.focus(); input?.setSelectionRange(this._search.length, this._search.length); });
   }
 }
