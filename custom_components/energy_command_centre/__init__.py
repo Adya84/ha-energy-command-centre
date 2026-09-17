@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.components import frontend, panel_custom
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
@@ -48,8 +48,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate pre-direct-inverter ECC entries to the current schema."""
     if entry.version == 1:
         # Version 1 stored no inverter connection details. Keep the entry and
-        # advance its schema version so ECC can load the sidebar normally; the
-        # user can then use Reconfigure to supply the inverter IP and port.
+        # advance its schema version; setup will immediately start Reconfigure
+        # so the user can enter the inverter IP and port.
         hass.config_entries.async_update_entry(entry, version=2)
         _LOGGER.info("Migrated Energy Command Centre config entry from version 1 to 2")
         return True
@@ -72,7 +72,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runtime: dict[str, object] = {"loaded": True, "connection_required": not bool(host)}
     hass.data[DOMAIN][entry.entry_id] = runtime
 
-    if host:
+    if not host:
+        reconfigure_running = any(
+            flow.get("context", {}).get("source") == SOURCE_RECONFIGURE
+            and flow.get("context", {}).get("entry_id") == entry.entry_id
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        )
+        if not reconfigure_running:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={
+                        "source": SOURCE_RECONFIGURE,
+                        "entry_id": entry.entry_id,
+                    },
+                ),
+                "Start Energy Command Centre inverter configuration",
+            )
+    else:
         coordinator = EnergyCommandCentreCoordinator(hass, str(host), port)
         await coordinator.async_config_entry_first_refresh()
         runtime["coordinator"] = coordinator
