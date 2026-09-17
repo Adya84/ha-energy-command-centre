@@ -11,6 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_HOST,
+    CONF_PORT,
+    DEFAULT_PORT,
     DOMAIN,
     FRONTEND_PATH,
     PANEL_ELEMENT,
@@ -19,6 +22,7 @@ from .const import (
     VERSION,
     static_assets,
 )
+from .coordinator import EnergyCommandCentreCoordinator
 from .websocket import async_register_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +45,18 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a configured hub and add its sidebar panel."""
+    """Set up a configured hub and its direct inverter connection."""
+    host = entry.data.get(CONF_HOST)
+    port = int(entry.data.get(CONF_PORT, DEFAULT_PORT))
+
+    runtime: dict[str, object] = {"loaded": True, "connection_required": not bool(host)}
+    hass.data[DOMAIN][entry.entry_id] = runtime
+
+    if host:
+        coordinator = EnergyCommandCentreCoordinator(hass, str(host), port)
+        await coordinator.async_config_entry_first_refresh()
+        runtime["coordinator"] = coordinator
+
     await panel_custom.async_register_panel(
         hass,
         webcomponent_name=PANEL_ELEMENT,
@@ -52,7 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         require_admin=False,
         config={"entry_id": entry.entry_id, "version": VERSION},
     )
-    hass.data[DOMAIN][entry.entry_id] = {"loaded": True}
     _LOGGER.info("Energy Command Centre %s loaded", VERSION)
     return True
 
@@ -60,5 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the configured hub."""
     frontend.async_remove_panel(hass, PANEL_URL)
-    hass.data[DOMAIN].pop(entry.entry_id, None)
+    runtime = hass.data[DOMAIN].pop(entry.entry_id, {})
+    coordinator = runtime.get("coordinator") if isinstance(runtime, dict) else None
+    if isinstance(coordinator, EnergyCommandCentreCoordinator):
+        await coordinator.async_close()
     return True
