@@ -4,7 +4,7 @@ from pathlib import Path
 
 DOMAIN = "energy_command_centre"
 NAME = "Energy Command Centre"
-VERSION = "0.1.0-alpha.14"
+VERSION = "0.1.0-alpha.15"
 
 CONF_HOST = "host"
 CONF_PORT = "port"
