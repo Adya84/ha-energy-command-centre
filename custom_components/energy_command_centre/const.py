@@ -4,7 +4,7 @@ from pathlib import Path
 
 DOMAIN = "energy_command_centre"
 NAME = "Energy Command Centre"
-VERSION = "0.1.0-alpha.11"
+VERSION = "0.1.0-alpha.12"
 
 PANEL_URL = "energy-command-centre"
 PANEL_ELEMENT = "energy-command-centre-panel"
@@ -13,7 +13,7 @@ FRONTEND_PATH = Path(__file__).parent / "frontend"
 BRAND_STATIC_URL = "/energy_command_centre_brand"
 BRAND_PATH = Path(__file__).parent / "brand"
 HOUSE_STATIC_URL = "/energy_command_centre_scene/house.png"
-HOUSE_PATH = FRONTEND_PATH / "assets" / "ecc-house-premium.png"
+HOUSE_PATH = FRONTEND_PATH / "assets" / "ecc-house-clean.png"
 
 WS_OVERVIEW = "energy_command_centre/overview"
 

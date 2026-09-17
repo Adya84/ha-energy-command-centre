@@ -6,7 +6,7 @@ import * as realisticScene from '../custom_components/energy_command_centre/fron
 const { renderRealisticScene } = realisticScene;
 
 const SCENE_URL = new URL('../custom_components/energy_command_centre/frontend/overview/realistic-scene.js', import.meta.url);
-const IMAGE_URL = new URL('../custom_components/energy_command_centre/frontend/assets/ecc-house-premium.png', import.meta.url);
+const IMAGE_URL = new URL('../custom_components/energy_command_centre/frontend/assets/ecc-house-clean.png', import.meta.url);
 const CONST_URL = new URL('../custom_components/energy_command_centre/const.py', import.meta.url);
 
 test('realistic overview serves the complete approved PNG through an explicit static route', async () => {
@@ -15,14 +15,62 @@ test('realistic overview serves the complete approved PNG through an explicit st
   const constants = await readFile(CONST_URL, 'utf8');
   const imageStats = await stat(IMAGE_URL);
 
-  assert.match(scene, /energy_command_centre_scene\/house\.png\?v=0\.1\.0-alpha\.11/);
+  assert.match(scene, /energy_command_centre_scene\/house\.png\?v=0\.1\.0-alpha\.12/);
   assert.match(constants, /HOUSE_STATIC_URL = "\/energy_command_centre_scene\/house\.png"/);
-  assert.match(constants, /HOUSE_PATH = FRONTEND_PATH \/ "assets" \/ "ecc-house-premium\.png"/);
+  assert.match(constants, /HOUSE_PATH = FRONTEND_PATH \/ "assets" \/ "ecc-house-clean\.png"/);
   assert.doesNotMatch(scene, /background-image\s*:\s*url/);
   assert.match(scene, /<img[^>]+class=["']ecc-house-photo["'][^>]+src=["']\$\{PHOTO_URL\}["']/);
   assert.match(scene, /\.ecc-house-photo\{[^}]*position:absolute[^}]*object-fit:cover/);
   assert.deepEqual([...image.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.ok(imageStats.size > 1_000_000, 'approved house image must not be a truncated placeholder');
+});
+
+test('the clean scene adds real local time, sun progress, wind and forecast as live overlays', () => {
+  const now = new Date('2026-09-17T17:45:00Z');
+  const html = renderRealisticScene({
+    generated_at: now.toISOString(),
+    entities: [],
+    environment: {
+      sun: {
+        state: 'above_horizon',
+        previous_rising: '2026-09-17T06:00:00Z',
+        next_setting: '2026-09-17T18:00:00Z',
+      },
+      wind: { value: 15.6, unit: 'km/h', bearing: 225, available: true },
+      solar_forecast_remaining_kwh: 1.8,
+    },
+  }, { now, timeZone: 'UTC' });
+
+  assert.match(html, /class="ecc-dynamic-sky ecc-sky-day"/);
+  assert.match(html, /class="ecc-celestial ecc-sun"/);
+  assert.match(html, /17 September 2026/);
+  assert.match(html, /17:45/);
+  assert.match(html, /9\.7 mph/);
+  assert.match(html, /rotate\(225deg\)/);
+  assert.match(html, /1\.8 kWh solar remaining/);
+  assert.match(html, /15m daylight remaining/);
+});
+
+test('night uses the real moon state instead of a sun baked into the image', () => {
+  const now = new Date('2026-09-17T23:00:00Z');
+  const html = renderRealisticScene({
+    entities: [],
+    environment: {
+      sun: {
+        state: 'below_horizon',
+        previous_setting: '2026-09-17T18:00:00Z',
+        next_rising: '2026-09-18T06:00:00Z',
+      },
+      moon_phase: 'waxing_gibbous',
+      wind: { available: false },
+    },
+  }, { now });
+
+  assert.match(html, /class="ecc-dynamic-sky ecc-sky-night"/);
+  assert.match(html, /class="ecc-celestial ecc-moon"/);
+  assert.match(html, /Waxing gibbous/);
+  assert.match(html, /7h 0m until sunrise/);
+  assert.match(html, /Wind unavailable/);
 });
 
 test('realistic overview keeps live equipment cards', () => {

@@ -271,11 +271,35 @@ class EnergyCommandCentrePanel extends HTMLElement {
     return ({ overview: () => this._overview(), battery: () => this._battery(), inverter: () => this._inverter(), health: () => this._health(), raw: () => this._raw(), settings: () => this._settings() }[this._active] || (() => this._overview()))();
   }
 
+  _captureScroll() {
+    const ancestors = [];
+    let node = this.parentElement;
+    while (node) {
+      ancestors.push({ node, top: node.scrollTop || 0, left: node.scrollLeft || 0 });
+      node = node.parentElement || node.getRootNode?.().host || null;
+    }
+    return {
+      ancestors,
+      windowX: globalThis.window?.scrollX || 0,
+      windowY: globalThis.window?.scrollY || 0,
+    };
+  }
+
+  _restoreScroll(state) {
+    for (const item of state.ancestors) {
+      item.node.scrollTop = item.top;
+      item.node.scrollLeft = item.left;
+    }
+    globalThis.window?.scrollTo?.(state.windowX, state.windowY);
+  }
+
   _render() {
+    const scroll = this._captureScroll();
     this.shadowRoot.innerHTML = `<style>${this._styles()}</style><div class="app"><header class="topbar"><div class="brand-mark"><img class="brand-logo" src="${BRAND_ICON}" alt=""></div><div class="brand"><strong>Energy Command Centre</strong><span>Universal energy console</span></div><div class="top-status"><span>${this._snapshot ? `Updated ${new Date(this._snapshot.generated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : "Starting…"}</span><span class="online">Local connection</span><button class="refresh">Refresh</button></div></header><div class="layout">${this._nav()}<main>${this._error ? `<div class="notice">${safe(this._error)}</div>` : ""}${this._content()}</main></div></div>`;
     this.shadowRoot.querySelectorAll("[data-page]").forEach((button) => button.addEventListener("click", () => { this._active = button.dataset.page; this._render(); }));
     this.shadowRoot.querySelector(".refresh")?.addEventListener("click", () => this._refresh());
     this.shadowRoot.querySelector(".search")?.addEventListener("input", (event) => { this._search = event.target.value; this._render(); const input = this.shadowRoot.querySelector(".search"); input?.focus(); input?.setSelectionRange(this._search.length, this._search.length); });
+    this._restoreScroll(scroll);
   }
 }
 
