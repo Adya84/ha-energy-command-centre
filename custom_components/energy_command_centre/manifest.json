@@ -6,9 +6,9 @@
   "dependencies": ["frontend", "http", "panel_custom"],
   "documentation": "https://github.com/Adya84/ha-energy-command-centre",
   "integration_type": "hub",
-  "iot_class": "local_push",
+  "iot_class": "local_polling",
   "issue_tracker": "https://github.com/Adya84/ha-energy-command-centre/issues",
-  "requirements": [],
+  "requirements": ["givenergy-modbus==2.13.0"],
   "single_config_entry": true,
   "version": "0.1.0-alpha.13"
 }
