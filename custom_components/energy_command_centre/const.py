@@ -4,7 +4,7 @@ from pathlib import Path
 
 DOMAIN = "energy_command_centre"
 NAME = "Energy Command Centre"
-VERSION = "0.1.0-alpha.9"
+VERSION = "0.1.0-alpha.10"
 
 PANEL_URL = "energy-command-centre"
 PANEL_ELEMENT = "energy-command-centre-panel"
@@ -12,13 +12,18 @@ STATIC_URL = "/energy_command_centre_static"
 FRONTEND_PATH = Path(__file__).parent / "frontend"
 BRAND_STATIC_URL = "/energy_command_centre_brand"
 BRAND_PATH = Path(__file__).parent / "brand"
+HOUSE_STATIC_URL = "/energy_command_centre_scene/house.png"
+HOUSE_PATH = FRONTEND_PATH / "assets" / "ecc-house-premium.png"
 
 WS_OVERVIEW = "energy_command_centre/overview"
 
 
 def static_assets() -> dict[str, Path]:
-    """Return individually exposed static brand assets."""
-    return {f"{BRAND_STATIC_URL}/icon.png": BRAND_PATH / "icon.png"}
+    """Return individually exposed static assets."""
+    return {
+        f"{BRAND_STATIC_URL}/icon.png": BRAND_PATH / "icon.png",
+        HOUSE_STATIC_URL: HOUSE_PATH,
+    }
 
 
 ENERGY_TERMS = (

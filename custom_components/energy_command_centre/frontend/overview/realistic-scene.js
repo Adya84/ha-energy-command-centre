@@ -1,5 +1,6 @@
 import { formatPower } from './formatters.js';
-import { HOUSE_IMAGE_DATA_URL } from './house-image.js';
+
+const PHOTO_URL = '/energy_command_centre_scene/house.png?v=0.1.0-alpha.10';
 
 const safe = (value) => String(value ?? '—')
   .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
@@ -51,7 +52,7 @@ export function renderRealisticScene(snapshot) {
 
   return `<div class="ecc-photo-overview">
     <section class="ecc-photo-stage" aria-label="Realistic Energy Command Centre home scene">
-      <img class="ecc-house-photo" src="${HOUSE_IMAGE_DATA_URL}" alt="Modern UK smart home with solar panels, battery storage and EV" draggable="false">
+      <img class="ecc-house-photo" src="${PHOTO_URL}" alt="Modern UK smart home with solar panels, battery storage and EV" draggable="false">
       <div id="ecc-solar-array" class="ecc-live-card" tabindex="0"><span class="ecc-live-icon">☀</span><span><small>Solar</small><strong>${safe(formatPower(solar))}</strong><em>${safe(stateLine(solar, 'Generating'))}</em></span></div>
       <div id="ecc-house" class="ecc-live-card" tabindex="0"><span class="ecc-live-icon">⌂</span><span><small>Home</small><strong>${safe(formatPower(load))}</strong><em>${safe(stateLine(load, 'Using'))}</em></span></div>
       <div id="ecc-grid" class="ecc-live-card" tabindex="0"><span class="ecc-live-icon">⌁</span><span><small>Grid</small><strong>${safe(formatPower(grid))}</strong><em>${safe(stateLine(grid, 'Live'))}</em></span></div>
