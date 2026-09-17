@@ -1,0 +1,1 @@
+Alpha.8 validates the realistic house as a real img element with bundled JPEG data.
