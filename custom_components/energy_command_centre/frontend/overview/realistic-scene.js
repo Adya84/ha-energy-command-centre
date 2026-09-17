@@ -124,8 +124,6 @@ const environmentLayer = (snapshot, now, timeZone) => {
   const environment = snapshot?.environment || {};
   const progress = solarProgress(environment, now);
   const night = progress.mode === 'night';
-  const left = Math.round(7 + progress.progress * 86);
-  const top = Math.round(66 - Math.sin(Math.PI * progress.progress) * 50);
   const wind = environment.wind || {};
   const windText = wind.available === false || wind.value == null
     ? 'Wind unavailable'
@@ -138,10 +136,10 @@ const environmentLayer = (snapshot, now, timeZone) => {
   const forecast = Number(environment.solar_forecast_remaining_kwh);
   const forecastText = Number.isFinite(forecast) ? `${forecast.toFixed(1)} kWh solar remaining` : 'Solar forecast unavailable';
   const moonPhase = titleCase(environment.moon_phase);
-  const stars = Array.from({ length: 26 }, (_, index) => `<i style="--x:${(index * 37) % 96}%;--y:${(index * 23) % 55}%;--delay:${(index % 6) * .4}s"></i>`).join('');
+  const stars = Array.from({ length: 18 }, (_, index) => `<i style="--x:${68 + (index * 17) % 28}%;--y:${2 + (index * 13) % 25}%;--delay:${(index % 6) * .4}s"></i>`).join('');
   return `<div class="ecc-dynamic-sky ecc-sky-${progress.mode}" aria-label="Live sky and weather">
     <div class="ecc-stars" aria-hidden="true">${stars}</div>
-    <div class="ecc-solar-arc" aria-hidden="true"><span></span><i class="ecc-celestial ${night ? 'ecc-moon' : 'ecc-sun'}" style="left:${left}%;top:${top}%">${night ? '◐' : '☀'}</i></div>
+    <div class="ecc-solar-arc" aria-hidden="true"><span></span><i class="ecc-celestial ${night ? 'ecc-moon' : 'ecc-sun'}" style="left:84%;top:15%">${night ? '◐' : '☀'}</i></div>
     <div class="ecc-clock"><strong>${safe(time)}</strong><span>${safe(date)}</span><small>${safe(remaining)} · ${safe(forecastText)}</small>${night ? `<em>${safe(moonPhase)}</em>` : ''}</div>
     <div class="ecc-wind"><i style="transform:rotate(${bearing}deg)">➤</i><span>${safe(windText)}</span></div>
   </div>`;

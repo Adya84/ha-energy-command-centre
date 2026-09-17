@@ -74,6 +74,7 @@ test('night uses the real moon state instead of a sun baked into the image', () 
 
   assert.match(html, /class="ecc-dynamic-sky ecc-sky-night"/);
   assert.match(html, /class="ecc-celestial ecc-moon"/);
+  assert.match(html, /left:84%;top:15%/);
   assert.match(html, /Waxing gibbous/);
   assert.match(html, /7h 0m until sunrise/);
   assert.match(html, /Wind unavailable/);
