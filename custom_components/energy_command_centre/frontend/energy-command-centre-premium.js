@@ -85,7 +85,24 @@ const directEntities = (snapshot) => {
 
 const adaptSnapshot = (snapshot) => {
   if (!snapshot || snapshot.source !== 'direct_inverter') return snapshot;
-  return { ...snapshot, entities: directEntities(snapshot) };
+  const entities = directEntities(snapshot);
+  const unavailable = entities.filter((item) => item.available === false).length;
+  const stale = snapshot.connection?.stale ? entities.length : 0;
+  return {
+    ...snapshot,
+    entities,
+    summary: {
+      total: entities.length,
+      available: entities.length - unavailable,
+      unavailable,
+      stale,
+      categories: entities.reduce((acc, item) => {
+        acc[item.category] = (acc[item.category] || 0) + 1;
+        return acc;
+      }, {}),
+      manufacturers: { GivEnergy: entities.length },
+    },
+  };
 };
 
 const prototype = Panel.prototype;
