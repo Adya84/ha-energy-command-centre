@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/Adya84/ha-energy-command-centre/issues",
   "requirements": ["givenergy-modbus==2.13.0"],
   "single_config_entry": true,
-  "version": "0.1.0-alpha.13"
+  "version": "0.1.0-alpha.14"
 }
