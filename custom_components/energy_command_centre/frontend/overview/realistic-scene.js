@@ -21,12 +21,13 @@ export const saveHasEv = (enabled, storage = globalThis.localStorage) => {
 };
 
 export const bindHasEvControl = (root, onChange, storage = globalThis.localStorage) => {
-  const input = root?.querySelector('#ecc-has-ev');
-  if (!input) return;
-  input.addEventListener('change', () => {
-    saveHasEv(input.checked, storage);
-    onChange?.(input.checked);
-  });
+  const inputs = root?.querySelectorAll?.('input[name="ecc-has-ev"]') || [];
+  inputs.forEach((input) => input.addEventListener('change', () => {
+    if (!input.checked) return;
+    const enabled = input.value === 'yes';
+    saveHasEv(enabled, storage);
+    onChange?.(enabled);
+  }));
 };
 
 const safe = (value) => String(value ?? '—')
@@ -187,7 +188,7 @@ export function renderRealisticScene(snapshot, options = {}) {
     <section class="ecc-photo-stage" aria-label="Realistic Energy Command Centre home scene">
       <img class="ecc-house-photo" src="${PHOTO_URL}" alt="Modern UK smart home with solar panels, battery storage and EV" draggable="false">
       ${environmentLayer(snapshot, now, options.timeZone)}
-      <div class="ecc-scene-controls"><label class="ecc-ev-toggle" for="ecc-has-ev"><input id="ecc-has-ev" type="checkbox"${hasEv ? ' checked' : ''}>I have an EV</label></div>
+      <div class="ecc-scene-controls"><div class="ecc-ev-toggle" role="group" aria-label="Do you have an EV?"><span>Do you have an EV?</span><label><input type="radio" name="ecc-has-ev" value="yes"${hasEv ? ' checked' : ''}> Yes</label><label><input type="radio" name="ecc-has-ev" value="no"${hasEv ? '' : ' checked'}> No</label></div></div>
       ${hasEv ? `<img class="ecc-ev-vehicle" src="${EV_URL}" alt="Electric vehicle" draggable="false">` : ''}
       <svg class="ecc-flow-layer" viewBox="0 0 1672 941" preserveAspectRatio="xMidYMid slice" aria-label="Live energy cable flows">
         <defs><filter id="ecc-power-glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>

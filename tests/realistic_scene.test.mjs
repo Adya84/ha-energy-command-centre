@@ -148,14 +148,16 @@ test('I have an EV control removes every EV overlay and remembers the choice', (
   assert.equal(readHasEv(storage), false);
 
   const hidden = renderRealisticScene({ entities: [] }, { hasEv: readHasEv(storage) });
-  assert.match(hidden, /<input[^>]+id="ecc-has-ev"[^>]*>/);
+  assert.match(hidden, /Do you have an EV\?/);
+  assert.match(hidden, /name="ecc-has-ev" value="yes"/);
+  assert.match(hidden, /name="ecc-has-ev" value="no"[^>]+checked/);
   assert.doesNotMatch(hidden, /id="ecc-ev-car"/);
   assert.doesNotMatch(hidden, /data-flow="ev"/);
   assert.doesNotMatch(hidden, /<small>EV<\/small>/);
 
   saveHasEv(true, storage);
   const visible = renderRealisticScene({ entities: [] }, { hasEv: readHasEv(storage) });
-  assert.match(visible, /<input[^>]+id="ecc-has-ev"[^>]+checked/);
+  assert.match(visible, /name="ecc-has-ev" value="yes"[^>]+checked/);
   assert.match(visible, /id="ecc-ev-car"/);
   assert.match(visible, /class="ecc-ev-vehicle"/);
   assert.match(visible, /data-flow="ev"/);
@@ -165,12 +167,13 @@ test('changing I have an EV saves the preference and immediately requests a rere
   assert.equal(typeof realisticScene.bindHasEvControl, 'function');
   let changeHandler;
   const input = {
-    checked: false,
+    checked: true,
+    value: 'no',
     addEventListener: (name, handler) => {
       if (name === 'change') changeHandler = handler;
     },
   };
-  const root = { querySelector: (selector) => selector === '#ecc-has-ev' ? input : null };
+  const root = { querySelectorAll: (selector) => selector === 'input[name="ecc-has-ev"]' ? [input] : [] };
   const values = new Map();
   const storage = {
     getItem: (key) => values.get(key) ?? null,
