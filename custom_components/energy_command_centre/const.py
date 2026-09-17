@@ -4,7 +4,7 @@ from pathlib import Path
 
 DOMAIN = "energy_command_centre"
 NAME = "Energy Command Centre"
-VERSION = "0.1.0-alpha.8"
+VERSION = "0.1.0-alpha.3"
 
 PANEL_URL = "energy-command-centre"
 PANEL_ELEMENT = "energy-command-centre-panel"
@@ -21,6 +21,8 @@ def static_assets() -> dict[str, Path]:
     return {f"{BRAND_STATIC_URL}/icon.png": BRAND_PATH / "icon.png"}
 
 
+# These are deliberately broad. Discovery ranks candidates using entity metadata,
+# device association, units and names rather than depending on exact entity IDs.
 ENERGY_TERMS = (
     "givenergy",
     "givtcp",
