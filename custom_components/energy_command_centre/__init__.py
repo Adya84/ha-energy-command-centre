@@ -44,6 +44,26 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate pre-direct-inverter ECC entries to the current schema."""
+    if entry.version == 1:
+        # Version 1 stored no inverter connection details. Keep the entry and
+        # advance its schema version so ECC can load the sidebar normally; the
+        # user can then use Reconfigure to supply the inverter IP and port.
+        hass.config_entries.async_update_entry(entry, version=2)
+        _LOGGER.info("Migrated Energy Command Centre config entry from version 1 to 2")
+        return True
+
+    if entry.version == 2:
+        return True
+
+    _LOGGER.error(
+        "Unsupported Energy Command Centre config entry version %s",
+        entry.version,
+    )
+    return False
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a configured hub and its direct inverter connection."""
     host = entry.data.get(CONF_HOST)
