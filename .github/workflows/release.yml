@@ -1,18 +1,19 @@
-name: Release alpha.7
+name: Release
 
 on:
   push:
     branches:
       - main
     paths:
-      - RELEASE_NOTES_ALPHA7.md
-      - custom_components/energy_command_centre/const.py
       - custom_components/energy_command_centre/manifest.json
-      - custom_components/energy_command_centre/frontend/overview/house-image.js
-      - custom_components/energy_command_centre/frontend/overview/realistic-scene.js
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   verify-and-release:
@@ -24,7 +25,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Run frontend tests
         run: node --test tests/*.test.mjs
@@ -38,17 +39,31 @@ jobs:
       - name: Hassfest validation
         uses: home-assistant/actions/hassfest@master
 
-      - name: Create alpha.7 release
+      - name: Read integration version
+        id: version
+        run: |
+          VERSION=$(python -c 'import json; print(json.load(open("custom_components/energy_command_centre/manifest.json"))["version"])')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          TAG="v0.1.0-alpha.7"
+          TAG="v$VERSION"
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists"
             exit 0
           fi
-          gh release create "$TAG" \
-            --target "$GITHUB_SHA" \
-            --title "Energy Command Centre 0.1.0-alpha.7" \
-            --notes-file RELEASE_NOTES_ALPHA7.md \
-            --prerelease
+
+          args=(
+            --target "$GITHUB_SHA"
+            --title "Energy Command Centre $VERSION"
+            --generate-notes
+          )
+
+          if [[ "$VERSION" == *-* ]]; then
+            args+=(--prerelease)
+          fi
+
+          gh release create "$TAG" "${args[@]}"
