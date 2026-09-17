@@ -25,6 +25,7 @@ test('realistic overview serves a clean no-car background and a separately addre
   assert.doesNotMatch(scene, /background-image\s*:\s*url/);
   assert.match(scene, /<img[^>]+class=["']ecc-house-photo["'][^>]+src=["']\$\{PHOTO_URL\}["']/);
   assert.match(scene, /\.ecc-house-photo\{[^}]*position:absolute[^}]*object-fit:cover/);
+  assert.match(scene, /\.ecc-ev-vehicle\{[^}]*right:2%[^}]*bottom:6%[^}]*width:30%/);
   assert.deepEqual([...image.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.deepEqual([...evImage.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
   assert.ok(imageStats.size > 1_000_000, 'approved house image must not be a truncated placeholder');
